@@ -216,6 +216,7 @@ dependencies = [
  "executor-types",
  "fail",
  "futures",
+ "futures-util",
  "goldenfile",
  "hex",
  "hyper",
@@ -230,6 +231,7 @@ dependencies = [
  "serde_json",
  "storage-interface",
  "tokio",
+ "tokio-stream",
  "vm-validator",
  "warp",
 ]

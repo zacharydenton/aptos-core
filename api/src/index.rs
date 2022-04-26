@@ -12,14 +12,20 @@ use crate::{
 };
 use aptos_api_types::{Error, Response};
 
+use futures_util::StreamExt;
 use std::convert::Infallible;
+use std::time::Duration;
+use tokio::time::interval;
+use tokio_stream::wrappers::IntervalStream;
 use warp::{
     body::BodyDeserializeError,
     cors::CorsForbidden,
     filters::BoxedFilter,
     http::{header, HeaderValue, StatusCode},
     reject::{LengthRequired, MethodNotAllowed, PayloadTooLarge, UnsupportedMediaType},
-    reply, Filter, Rejection, Reply,
+    reply,
+    sse::Event,
+    Filter, Rejection, Reply,
 };
 
 const OPEN_API_HTML: &str = include_str!("../doc/spec.html");
@@ -28,6 +34,7 @@ const OPEN_API_SPEC: &str = include_str!("../doc/openapi.yaml");
 pub fn routes(context: Context) -> impl Filter<Extract = impl Reply, Error = Infallible> + Clone {
     index(context.clone())
         .or(openapi_spec())
+        .or(sse(context.clone()))
         .or(accounts::get_account(context.clone()))
         .or(accounts::get_account_resources(context.clone()))
         .or(accounts::get_account_resource(context.clone()))
@@ -84,6 +91,28 @@ pub async fn handle_index(context: Context) -> Result<impl Reply, Rejection> {
     fail_point("endpoint_index")?;
     let info = context.get_latest_ledger_info()?;
     Ok(Response::new(info.clone(), &info)?)
+}
+
+// GET /sse
+pub fn sse(context: Context) -> BoxedFilter<(impl Reply,)> {
+    warp::path!("sse")
+        .and(warp::get())
+        .and(context.filter())
+        .and_then(handle_sse)
+        .with(metrics("sse"))
+        .boxed()
+}
+
+pub async fn handle_sse(context: Context) -> Result<impl Reply, Rejection> {
+    fail_point("endpoint_sse")?;
+    let interval = interval(Duration::from_secs(1));
+
+    let info_stream = IntervalStream::new(interval).map(move |_| {
+        let info = context.get_latest_ledger_info().unwrap();
+        Event::default().json_data(info)
+    });
+
+    Ok(warp::sse::reply(info_stream))
 }
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
