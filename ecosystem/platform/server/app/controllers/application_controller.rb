@@ -56,7 +56,7 @@ class ApplicationController < ActionController::Base
   end
 
   def set_sentry_metadata
-    Sentry.set_user(id: current_user.id) if current_user
     Sentry.set_tags(request_id: request.request_id)
+    Sentry.set_user(id: current_user&.id)
   end
 end
