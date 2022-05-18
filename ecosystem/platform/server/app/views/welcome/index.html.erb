@@ -4,24 +4,27 @@
       <%= render 'shared/it1_intro' %>
     </div>
     <% if user_signed_in? %>
-      <div class="p-4 rounded-lg bg-neutral-700">
-        <h3 class="mb-2">You are now signed in with your previous GitHub registration.</h3>
+      <%= render CardComponent.new do %>
+        <h3 class="mb-2 font-display">You are now signed in with your previous GitHub registration.</h3>
         <p class="mb-4 font-light text-sm">
         Click below to link your Discord account.
         </p>
         <%= render LoginButtonComponent.new(provider: :discord, size: :large, class: 'w-full') %>
-      </div>
+      <% end %>
     <% else %>
-    <div class="mb-8 sm:mb-12">
-      <%= render LoginButtonComponent.new(provider: :discord, size: :large, class: 'w-full') %>
-    </div>
-    <div class="p-4 rounded-lg bg-neutral-700">
-      <h3 class="mb-2">IMPORTANT: We now require all users to sign in with Discord.</h3>
-      <p class="mb-4 font-light text-sm">
-      If you previously signed up with GitHub, click below to preserve your verification status.
-      </p>
-      <%= render LoginButtonComponent.new(provider: :github, size: :large, class: 'w-full') %>
-    </div>
+      <div class="mb-8 sm:mb-12">
+        <%= render LoginButtonComponent.new(provider: :discord, size: :large, class: 'w-full') %>
+      </div>
+      <%= render CardComponent.new do %>
+        <div class="flex items-center">
+          <%= render IconComponent.new(:info, size: :medium) %>
+          <h3 class="font-display text-lg">IMPORTANT: We now require all users to sign in with Discord.</h3>
+        </div>
+        <p class="mb-4 font-light text-sm">
+        If you previously signed up with GitHub, click below to preserve your verification status.
+        </p>
+        <%= render LoginButtonComponent.new(provider: :github, size: :large, class: 'w-full') %>
+      <% end %>
     <% end %>
   </div>
 </div>
